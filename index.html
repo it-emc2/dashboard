@@ -99,7 +99,7 @@ body{
 #bar-wrapper::after {top:25%}              /* helper grid line */
 
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center}
-.bar{
+.chart-bar{
 	width:100%;background:var(--c-blue);border-radius:4px 4px 0 0;
 	display:flex;align-items:flex-end;justify-content:center;
 	color:#fff;font-size:.8rem;padding-bottom:.3rem
@@ -150,7 +150,7 @@ body{
 
 		<div class="card grey">
 			<div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div>
-			<div class="number" id="goal">12</div>
+			<div class="number" id="goal">24</div>
 		</div>
 
 		<div class="card green">
@@ -192,7 +192,7 @@ const bars=[
 	{day:'Fr',date:'24.06.',val:21},
 ];
 const max=25;
-const current=1, goal=12;
+const current=16, goal=24;
 
 /* ---------- Bar Chart ---------- */
 const wrap=document.getElementById('bar-wrapper');
@@ -201,7 +201,7 @@ bars.forEach(b=>{
 	col.className='bar-col';
 
 	const bar=document.createElement('div');
-	bar.className='bar';
+	bar.className='chart-bar';
 	bar.style.height=`${(b.val/max)*100}%`;
 	bar.textContent=b.val;
 
