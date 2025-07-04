@@ -136,11 +136,11 @@ body{
 		</div>
 		<div class="card orange">
 			<div class="title"><span class="icon list"></span>Angebote<br>heute</div>
-			<div class="number" id="offers-today">16</div>
+			<div class="number" id="offers-today">10</div>
 		</div>
 		<div class="card grey">
 			<div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div>
-			<div class="number" id="goal">24</div>
+			<div class="number" id="goal">12</div>
 		</div>
 		<div class="card green">
 			<div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div>
@@ -160,7 +160,7 @@ body{
 		<div class="panel">
 			<h2>Angebote heute erstellt</h2>
 			<div id="donut">
-				<div class="value" id="donut-val">16</div>
+				<div class="value" id="donut-val">10</div>
 				<div class="pct" id="donut-pct">66&nbsp;%</div>
 			</div>
 		</div>
@@ -174,14 +174,14 @@ document.getElementById('today').textContent =
 
 /* ---------- Data ---------- */
 const bars=[
-	{day:'Mo',date:'20.06.',val:18},
-	{day:'Di',date:'21.06.',val:20},
-	{day:'Mi',date:'22.06.',val:22},
-	{day:'Do',date:'23.06.',val:23},
-	{day:'Fr',date:'24.06.',val:21},
+	{day:'Mo',date:'30.07.',val:18},
+	{day:'Di',date:'01.07.',val:20},
+	{day:'Mi',date:'02.07.',val:12},
+	{day:'Do',date:'03.07.',val:6},
+	{day:'Fr',date:'04.07.',val:0},
 ];
 const max=30, step=5;
-const current=16, goal=24;
+const current=10, goal=12;
 
 /* ---------- Resolve theme colours --------------------------- */
 const css      = getComputedStyle(document.documentElement);
