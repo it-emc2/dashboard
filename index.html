@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vertriebsübersicht</title>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
 <style>
 /* ---------- Design Tokens ---------- */
 :root{
@@ -13,6 +16,7 @@
 	--fs-h2:1.15rem;
 	--fs-number:clamp(2rem,6vw,3.4rem);
 
+	/* base colours */
 	--c-blue:#2376ff;
 	--c-blue-light:#eaf3ff;
 	--c-blue-border:#cfe2ff;
@@ -31,7 +35,12 @@
 
 	--c-bg:#ffffff;
 	--c-grid:#e5e7eb;
+	--c-grid-dark:#d0d5dd;   /* darker lines for the canvas grid */
 	--c-text:#0d1117;
+
+	/* chart-specific */
+	--c-bar:#2376ff;         /* bars */
+	--c-label:#868E99;       /* axis labels & ticks */
 }
 
 /* ---------- Reset ---------- */
@@ -64,8 +73,12 @@ body{
 
 .title{display:flex;align-items:center;gap:.75rem;font-size:var(--fs-h2);font-weight:600;line-height:1.25}
 .icon{width:30px;height:30px;display:inline-block;position:relative}
+
+/* mask icons */
 .icon::before{
-	content:"";position:absolute;inset:0;mask-size:contain;mask-repeat:no-repeat;mask-position:center;background:currentColor;
+	content:"";position:absolute;inset:0;
+	mask-size:contain;mask-repeat:no-repeat;mask-position:center;
+	background:currentColor;
 }
 .icon.funnel{color:var(--c-blue)}
 .icon.funnel::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4h18L14 13v6l-4 1v-7L3 4Z"/></svg>')}
@@ -83,74 +96,24 @@ body{
 @media(min-width:820px){.chart-grid{grid-template-columns:repeat(2,1fr);grid-column:1/-1}}
 .panel{
 	border:2px solid var(--c-grey-border);border-radius:10px;background:#fff;
-	padding:1.6rem 1.8rem 2.8rem;          /* extra bottom room for labels */
-	display:flex;flex-direction:column;height:100%
+	padding:1.6rem 1.8rem;display:flex;flex-direction:column;height:100%
 }
 .panel h2{font-size:var(--fs-h2);font-weight:700;margin-bottom:1rem}
+#chart-wrapper{position:relative;height:300px}
 
-/* bar chart ------------------------------------------------------------ */
-#bar-wrapper{
-	position:relative;
-	flex:1;
-	display:flex;
-	align-items:flex-end;
-	gap:1.3rem;
-
-	height:240px;                       /* fixed plot height */
-	margin-left:2.8rem;                 /* room for y-axis numbers */
-	margin-bottom:48px;                 /* room for date labels */
-
-	background:
-		repeating-linear-gradient(
-			to bottom,
-			var(--c-grid) 0 2px,
-			transparent 2px 60px
-		);
-}
-#bar-wrapper::before,#bar-wrapper::after{
-	content:"";position:absolute;background:var(--c-grid);
-}
-#bar-wrapper::before{left:0;top:0;bottom:0;width:2px}   /* y-axis */
-#bar-wrapper::after {left:0;right:0;bottom:0;height:2px}/* x-axis */
-
-/* y-axis scale --------------------------------------------------------- */
-.y-scale{
-	position:absolute;
-	left:-2.8rem;top:0;bottom:0;
-	display:flex;flex-direction:column;justify-content:space-between;
-	font-size:.8rem;color:var(--c-grey);text-align:right;line-height:1;
-}
-
-/* columns -------------------------------------------------------------- */
-.bar-col{
-	position:relative;
-	flex:1;
-	display:flex;justify-content:flex-end;
-}
-.chart-bar{
-	width:100%;background:var(--c-blue);border-radius:4px 4px 0 0;
-	display:flex;align-items:flex-end;justify-content:center;
-	color:#fff;font-size:.8rem;padding-bottom:.3rem
-}
-.bar-label{
-	position:absolute;left:50%;bottom:-38px;transform:translateX(-50%);
-	font-size:.8rem;color:var(--c-grey);text-align:center;line-height:1.25;
-}
-
-/* donut chart ---------------------------------------------------------- */
+/* ---------- Donut ---------- */
 #donut{
 	--size:230px;--hole:62%;
 	width:var(--size);height:var(--size);border-radius:50%;
 	background:conic-gradient(var(--c-orange) var(--angle),#e6e9ed 0);
-	position:relative;margin:auto;display:grid;place-content:center
+	position:relative;display:grid;place-content:center;margin:auto
 }
-#donut::before{content:"";position:absolute;border-radius:50%;
-	inset:calc((100% - var(--hole))/2);background:#fff}
-#donut > *{position:relative;z-index:1;text-align:center}
-#donut .value{font-size:2.5rem;font-weight:700}
-#donut .pct{font-size:1rem;color:var(--c-grey)}
+#donut::before{content:"";position:absolute;border-radius:50%;inset:calc((100% - var(--hole)) / 2);background:#fff}
+#donut>*{position:relative;z-index:1}
+#donut .value{font-size:2.5rem;font-weight:700;text-align:center}
+#donut .pct{font-size:1rem;color:var(--c-grey);text-align:center}
 
-/* small screens -------------------------------------------------------- */
+/* small screens */
 @media(max-width:500px){
 	.card{min-height:130px}
 	#donut{--size:180px}
@@ -171,17 +134,14 @@ body{
 			<div class="title"><span class="icon funnel"></span>Leads</div>
 			<div class="number" id="leads">37</div>
 		</div>
-
 		<div class="card orange">
 			<div class="title"><span class="icon list"></span>Angebote<br>heute</div>
 			<div class="number" id="offers-today">16</div>
 		</div>
-
 		<div class="card grey">
 			<div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div>
 			<div class="number" id="goal">24</div>
 		</div>
-
 		<div class="card green">
 			<div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div>
 			<div class="number" id="avg-5">18,4</div>
@@ -190,16 +150,18 @@ body{
 
 	<!-- Charts -->
 	<div class="chart-grid">
+		<!-- BAR -->
 		<div class="panel">
 			<h2>Täglich geschriebene Angebote</h2>
-			<div id="bar-wrapper"></div>
+			<div id="chart-wrapper"><canvas id="dailyChart"></canvas></div>
 		</div>
 
+		<!-- DONUT -->
 		<div class="panel">
 			<h2>Angebote heute erstellt</h2>
 			<div id="donut">
 				<div class="value" id="donut-val">16</div>
-				<div class="pct"   id="donut-pct">67&nbsp;%</div>
+				<div class="pct" id="donut-pct">66&nbsp;%</div>
 			</div>
 		</div>
 	</div>
@@ -208,9 +170,7 @@ body{
 <script>
 /* ---------- Date ---------- */
 document.getElementById('today').textContent =
-	new Intl.DateTimeFormat('de-DE',
-		 {day:'2-digit',month:'long',year:'numeric'})
-		.format(new Date());
+	new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(new Date());
 
 /* ---------- Data ---------- */
 const bars=[
@@ -220,47 +180,67 @@ const bars=[
 	{day:'Do',date:'23.06.',val:23},
 	{day:'Fr',date:'24.06.',val:21},
 ];
-const max=25;                   // y-axis max value
-const step=5;                   // y-axis interval
+const max=30, step=5;
 const current=16, goal=24;
 
-/* ---------- Bar Chart ---------- */
-const wrap=document.getElementById('bar-wrapper');
+/* ---------- Resolve theme colours --------------------------- */
+const css      = getComputedStyle(document.documentElement);
+const cBar     = css.getPropertyValue('--c-bar').trim();
+const cLabel   = css.getPropertyValue('--c-label').trim();
+const cGrid    = css.getPropertyValue('--c-grid-dark').trim();
+const cText    = css.getPropertyValue('--c-text').trim();
 
-/* y-axis numbers */
-const yBox=document.createElement('div');
-yBox.className='y-scale';
-for(let v=max;v>=0;v-=step){
-	const s=document.createElement('span');
-	s.textContent=v;
-	yBox.append(s);
-}
-wrap.append(yBox);
-
-/* bars */
-bars.forEach(b=>{
-	const col=document.createElement('div');
-	col.className='bar-col';
-
-	const bar=document.createElement('div');
-	bar.className='chart-bar';
-	bar.style.height=`${(b.val/max)*100}%`;
-	bar.textContent=b.val;
-
-	const label=document.createElement('div');
-	label.className='bar-label';
-	label.innerHTML=`${b.day}<br><span style="font-size:.75rem">${b.date}</span>`;
-
-	col.append(bar,label);
-	wrap.append(col);
+/* ---------- Bar chart --------------------------------------- */
+new Chart(document.getElementById('dailyChart'),{
+	type:'bar',
+	data:{
+		labels:bars.map(b=>`${b.day}\n${b.date}`),
+		datasets:[{
+			data:bars.map(b=>b.val),
+			backgroundColor:cBar,
+			borderRadius:4,
+			barThickness:38
+		}]
+	},
+	options:{
+		responsive:true,
+		maintainAspectRatio:false,
+		layout:{padding:{top:10,right:8,left:8,bottom:0}},
+		scales:{
+			x:{
+				grid:{display:false},
+				ticks:{
+					color:cLabel,
+					font:{size:14,weight:500},
+					callback:(_,i)=>`${bars[i].day}\n${bars[i].date}`
+				}
+			},
+			y:{
+				beginAtZero:true,
+				suggestedMax:max,
+				ticks:{stepSize:step,color:cLabel,font:{size:14}},
+				grid:{
+					color:cGrid,    /* darker grid colour */
+					lineWidth:1.2,
+					drawBorder:false
+				}
+			}
+		},
+		plugins:{
+			legend:{display:false},
+			tooltip:{
+				backgroundColor:cText,
+				callbacks:{label:ctx=>` ${ctx.parsed.y} Angebote`}
+			}
+		}
+	}
 });
 
-/* ---------- Donut ---------- */
-const angle=Math.min(current/goal,1)*360;
-document.getElementById('donut').style.setProperty('--angle',angle+'deg');
+/* ---------- Donut ------------------------------------------- */
+const donut=document.getElementById('donut');
+donut.style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
 document.getElementById('donut-val').textContent=current;
-document.getElementById('donut-pct').textContent=
-	Math.round((current/goal)*100)+' %';
+document.getElementById('donut-pct').textContent=Math.round((current/goal)*100)+' %';
 </script>
 </body>
 </html>
