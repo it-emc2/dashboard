@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vertriebsübersicht</title>
+
 <style>
 /* ---------- Design Tokens ---------- */
 :root{
@@ -12,7 +13,6 @@
 	--fs-h2:1.15rem;
 	--fs-number:clamp(2rem,6vw,3.4rem);
 
-	/* base colours */
 	--c-blue:#2376ff;
 	--c-blue-light:#eaf3ff;
 	--c-blue-border:#cfe2ff;
@@ -64,20 +64,16 @@ body{
 
 .title{display:flex;align-items:center;gap:.75rem;font-size:var(--fs-h2);font-weight:600;line-height:1.25}
 .icon{width:30px;height:30px;display:inline-block;position:relative}
-
-/* mask icons */
 .icon::before{
-	content:"";position:absolute;inset:0;
-	mask-size:contain;mask-repeat:no-repeat;mask-position:center;
-	background:currentColor;
+	content:"";position:absolute;inset:0;mask-size:contain;mask-repeat:no-repeat;mask-position:center;background:currentColor;
 }
-.icon.funnel {color:var(--c-blue)}
-.icon.funnel::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4h18L14 13v6l-4 1v-7L3 4Z" /></svg>')}
-.icon.list   {color:var(--c-orange)}
+.icon.funnel{color:var(--c-blue)}
+.icon.funnel::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4h18L14 13v6l-4 1v-7L3 4Z"/></svg>')}
+.icon.list{color:var(--c-orange)}
 .icon.list::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4z"/></svg>')}
-.icon.target {color:var(--c-grey)}
+.icon.target{color:var(--c-grey)}
 .icon.target::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3v2a7 7 0 1 1-7 7H3a9 9 0 1 0 9-9Z"/><circle cx="12" cy="12" r="3"/></svg>')}
-.icon.bar    {color:var(--c-green)}
+.icon.bar{color:var(--c-green)}
 .icon.bar::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 9h3v11H5zm5-4h3v15h-3zm5 8h3v7h-3z"/></svg>')}
 
 .number{font-size:var(--fs-number);font-weight:700;margin-top:.5rem}
@@ -87,41 +83,74 @@ body{
 @media(min-width:820px){.chart-grid{grid-template-columns:repeat(2,1fr);grid-column:1/-1}}
 .panel{
 	border:2px solid var(--c-grey-border);border-radius:10px;background:#fff;
-	padding:1.6rem 1.8rem;display:flex;flex-direction:column;height:100%
+	padding:1.6rem 1.8rem 2.8rem;          /* extra bottom room for labels */
+	display:flex;flex-direction:column;height:100%
 }
 .panel h2{font-size:var(--fs-h2);font-weight:700;margin-bottom:1rem}
 
-/* bar chart */
-#bar-wrapper{flex:1;display:flex;align-items:flex-end;gap:1.3rem;position:relative}
-#bar-wrapper::before,
-#bar-wrapper::after{content:"";position:absolute;left:0;right:0;height:2px;background:var(--c-grid)}
-#bar-wrapper::before{bottom:0}             /* x-axis  */
-#bar-wrapper::after {top:25%}              /* helper grid line */
+/* bar chart ------------------------------------------------------------ */
+#bar-wrapper{
+	position:relative;
+	flex:1;
+	display:flex;
+	align-items:flex-end;
+	gap:1.3rem;
 
-.bar-col{flex:1;display:flex;flex-direction:column;align-items:center}
+	height:240px;                       /* fixed plot height */
+	margin-left:2.8rem;                 /* room for y-axis numbers */
+	margin-bottom:48px;                 /* room for date labels */
+
+	background:
+		repeating-linear-gradient(
+			to bottom,
+			var(--c-grid) 0 2px,
+			transparent 2px 60px
+		);
+}
+#bar-wrapper::before,#bar-wrapper::after{
+	content:"";position:absolute;background:var(--c-grid);
+}
+#bar-wrapper::before{left:0;top:0;bottom:0;width:2px}   /* y-axis */
+#bar-wrapper::after {left:0;right:0;bottom:0;height:2px}/* x-axis */
+
+/* y-axis scale --------------------------------------------------------- */
+.y-scale{
+	position:absolute;
+	left:-2.8rem;top:0;bottom:0;
+	display:flex;flex-direction:column;justify-content:space-between;
+	font-size:.8rem;color:var(--c-grey);text-align:right;line-height:1;
+}
+
+/* columns -------------------------------------------------------------- */
+.bar-col{
+	position:relative;
+	flex:1;
+	display:flex;justify-content:flex-end;
+}
 .chart-bar{
 	width:100%;background:var(--c-blue);border-radius:4px 4px 0 0;
 	display:flex;align-items:flex-end;justify-content:center;
 	color:#fff;font-size:.8rem;padding-bottom:.3rem
 }
-.bar-label{margin-top:.6rem;text-align:center;font-size:.8rem;color:var(--c-grey)}
+.bar-label{
+	position:absolute;left:50%;bottom:-38px;transform:translateX(-50%);
+	font-size:.8rem;color:var(--c-grey);text-align:center;line-height:1.25;
+}
 
-/* donut chart */
+/* donut chart ---------------------------------------------------------- */
 #donut{
-	--size:230px;--hole:62%;      /* hole controls the donut thickness */
+	--size:230px;--hole:62%;
 	width:var(--size);height:var(--size);border-radius:50%;
 	background:conic-gradient(var(--c-orange) var(--angle),#e6e9ed 0);
-	position:relative;display:grid;place-content:center;margin:auto
+	position:relative;margin:auto;display:grid;place-content:center
 }
-#donut::before{                          /* inner white circle (the hole) */
-	content:"";position:absolute;border-radius:50%;
-	inset:calc((100% - var(--hole)) / 2);background:#fff
-}
-#donut > *{position:relative;z-index:1}  /* place text above the hole */
-#donut .value{font-size:2.5rem;font-weight:700;text-align:center}
-#donut .pct{font-size:1rem;color:var(--c-grey);text-align:center}
+#donut::before{content:"";position:absolute;border-radius:50%;
+	inset:calc((100% - var(--hole))/2);background:#fff}
+#donut > *{position:relative;z-index:1;text-align:center}
+#donut .value{font-size:2.5rem;font-weight:700}
+#donut .pct{font-size:1rem;color:var(--c-grey)}
 
-/* small screens */
+/* small screens -------------------------------------------------------- */
 @media(max-width:500px){
 	.card{min-height:130px}
 	#donut{--size:180px}
@@ -170,7 +199,7 @@ body{
 			<h2>Angebote heute erstellt</h2>
 			<div id="donut">
 				<div class="value" id="donut-val">16</div>
-				<div class="pct"   id="donut-pct">66&nbsp;%</div>
+				<div class="pct"   id="donut-pct">67&nbsp;%</div>
 			</div>
 		</div>
 	</div>
@@ -191,11 +220,24 @@ const bars=[
 	{day:'Do',date:'23.06.',val:23},
 	{day:'Fr',date:'24.06.',val:21},
 ];
-const max=25;
+const max=25;                   // y-axis max value
+const step=5;                   // y-axis interval
 const current=16, goal=24;
 
 /* ---------- Bar Chart ---------- */
 const wrap=document.getElementById('bar-wrapper');
+
+/* y-axis numbers */
+const yBox=document.createElement('div');
+yBox.className='y-scale';
+for(let v=max;v>=0;v-=step){
+	const s=document.createElement('span');
+	s.textContent=v;
+	yBox.append(s);
+}
+wrap.append(yBox);
+
+/* bars */
 bars.forEach(b=>{
 	const col=document.createElement('div');
 	col.className='bar-col';
@@ -215,8 +257,7 @@ bars.forEach(b=>{
 
 /* ---------- Donut ---------- */
 const angle=Math.min(current/goal,1)*360;
-const donut=document.getElementById('donut');
-donut.style.setProperty('--angle',angle+'deg');
+document.getElementById('donut').style.setProperty('--angle',angle+'deg');
 document.getElementById('donut-val').textContent=current;
 document.getElementById('donut-pct').textContent=
 	Math.round((current/goal)*100)+' %';
