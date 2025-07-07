@@ -1,54 +1,118 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Vertriebsübersicht</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --angle: 240deg;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vertriebsübersicht</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root{
+	--angle:240deg;
+	--font-sans:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+	--fs-h1:clamp(1.8rem,4vw,2.6rem);
+	--fs-h2:1.15rem;
+	--fs-number:clamp(2rem,6vw,3.4rem);
+	--c-blue:#2376ff;
+	--c-blue-light:#eaf3ff;
+	--c-blue-border:#cfe2ff;
+	--c-orange:#ff7a1c;
+	--c-orange-light:#fff6ed;
+	--c-orange-border:#ffd6b7;
+	--c-grey:#6d7786;
+	--c-grey-light:#fafbfd;
+	--c-grey-border:#e1e6ef;
+	--c-green:#029c46;
+	--c-green-light:#e8faed;
+	--c-green-border:#c9f1d8;
+	--c-bg:#ffffff;
+	--c-grid:#e5e7eb;
+	--c-grid-dark:#d0d5dd;
+	--c-text:#0d1117;
+	--c-bar:#2376ff;
+	--c-label:#868E99;
+}
+</style>
 </head>
 <body>
-  <div class="number" id="leads">37</div>
-  <div class="number" id="offers-today">16</div>
-  <div class="number" id="goal">24</div>
-  <div class="number" id="avg-5">18.4</div>
-  <div class="value" id="donut-val">16</div>
-  <div class="pct" id="donut-pct">67&nbsp;%</div>
-
-  <script>
-    const bars = [
-  {
-    "day": "Mo",
-    "date": "07.07.",
-    "val": 16
+<section class="dashboard">
+<header class="hdr">
+<h1>Vertriebsübersicht</h1>
+<span class="date" id="today"></span>
+</header>
+<div class="cards">
+<div class="card">
+<div class="title"><span class="icon funnel"></span>Leads</div>
+<div class="number" id="leads">37</div>
+</div>
+<div class="card orange">
+<div class="title"><span class="icon list"></span>Angebote<br>heute</div>
+<div class="number" id="offers-today">16</div>
+</div>
+<div class="card grey">
+<div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div>
+<div class="number" id="goal">24</div>
+</div>
+<div class="card green">
+<div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div>
+<div class="number" id="avg-5">18.4</div>
+</div>
+</div>
+<div class="chart-grid">
+<div class="panel">
+<h2>Täglich geschriebene Angebote</h2>
+<div id="chart-wrapper"><canvas id="dailyChart"></canvas></div>
+</div>
+<div class="panel">
+<h2>Angebote heute erstellt</h2>
+<div id="donut">
+<div class="value" id="donut-val">16</div>
+<div class="pct" id="donut-pct">67&nbsp;%</div>
+</div>
+</div>
+</div>
+</section>
+<script>
+document.getElementById('today').textContent =
+  new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(new Date());
+const bars = [{"day":"Mo","date":"07.07.","val":16},{"day":"Di","date":"08.07.","val":0},{"day":"Mi","date":"09.07.","val":0},{"day":"Do","date":"10.07.","val":0},{"day":"Fr","date":"11.07.","val":0}];
+const max=30, step=5;
+const current=16, goal=24;
+const css = getComputedStyle(document.documentElement);
+const cBar = css.getPropertyValue('--c-bar').trim();
+const cLabel = css.getPropertyValue('--c-label').trim();
+const cGrid = css.getPropertyValue('--c-grid-dark').trim();
+const cText = css.getPropertyValue('--c-text').trim();
+new Chart(document.getElementById('dailyChart'),{
+  type:'bar',
+  data:{
+    labels:bars.map(function(b){ return b.day + "
+" + b.date }),
+    datasets:[{
+      data:bars.map(function(b){ return b.val }),
+      backgroundColor:cBar,
+      borderRadius:4,
+      barThickness:38
+    }]
   },
-  {
-    "day": "Di",
-    "date": "08.07.",
-    "val": 0
-  },
-  {
-    "day": "Mi",
-    "date": "09.07.",
-    "val": 0
-  },
-  {
-    "day": "Do",
-    "date": "10.07.",
-    "val": 0
-  },
-  {
-    "day": "Fr",
-    "date": "11.07.",
-    "val": 0
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    layout:{padding:{top:10,right:8,left:8,bottom:0}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:cLabel,font:{size:14,weight:500},callback:function(_,i){ return bars[i].day + "
+" + bars[i].date }}},
+      y:{beginAtZero:true,suggestedMax:max,ticks:{stepSize:step,color:cLabel,font:{size:14}},grid:{color:cGrid,lineWidth:1.2,drawBorder:false}}
+    },
+    plugins:{
+      legend:{display:false},
+      tooltip:{backgroundColor:cText,callbacks:{label:function(ctx){ return " " + ctx.parsed.y + " Angebote" }}}
+    }
   }
-];
-    // Use 'bars' in Chart.js setup
-  </script>
+});
+const donut=document.getElementById('donut');
+donut.style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
+document.getElementById('donut-val').textContent=current;
+document.getElementById('donut-pct').textContent=Math.round((current/goal)*100)+' %';
+</script>
 </body>
 </html>
