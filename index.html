@@ -1,4 +1,246 @@
-<div class="card">
-  <div class="title"><span class="icon funnel"></span>Leads</div>
-  <div class="number" id="leads">96</div>
-</div>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vertriebsübersicht</title>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<style>
+/* ---------- Design Tokens ---------- */
+:root{
+	--font-sans:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+	--fs-h1:clamp(1.8rem,4vw,2.6rem);
+	--fs-h2:1.15rem;
+	--fs-number:clamp(2rem,6vw,3.4rem);
+
+	/* base colours */
+	--c-blue:#2376ff;
+	--c-blue-light:#eaf3ff;
+	--c-blue-border:#cfe2ff;
+
+	--c-orange:#ff7a1c;
+	--c-orange-light:#fff6ed;
+	--c-orange-border:#ffd6b7;
+
+	--c-grey:#6d7786;
+	--c-grey-light:#fafbfd;
+	--c-grey-border:#e1e6ef;
+
+	--c-green:#029c46;
+	--c-green-light:#e8faed;
+	--c-green-border:#c9f1d8;
+
+	--c-bg:#ffffff;
+	--c-grid:#e5e7eb;
+	--c-grid-dark:#d0d5dd;   /* darker lines for the canvas grid */
+	--c-text:#0d1117;
+
+	/* chart-specific */
+	--c-bar:#2376ff;         /* bars */
+	--c-label:#868E99;       /* axis labels & ticks */
+}
+
+/* ---------- Reset ---------- */
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+	font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
+	-webkit-font-smoothing:antialiased;
+	padding:2.5rem 1.25rem;
+}
+
+/* ---------- Layout ---------- */
+.dashboard{display:grid;gap:1.5rem;max-width:1150px;margin-inline:auto}
+@media(min-width:820px){.dashboard{grid-template-columns:repeat(12,1fr)}}
+
+/* ---------- Header ---------- */
+.hdr{grid-column:1/-1;display:flex;justify-content:space-between;align-items:start}
+.hdr h1{font-size:var(--fs-h1);font-weight:800}
+.hdr .date{font-size:1.15rem;font-weight:500;color:var(--c-grey)}
+
+/* ---------- Cards ---------- */
+.cards{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.2rem}
+.card{
+	padding:1.6rem 1.8rem;border-radius:10px;min-height:150px;
+	border:2px solid var(--c-blue-border);background:var(--c-blue-light);
+	display:flex;flex-direction:column;justify-content:space-between
+}
+.card.orange{border-color:var(--c-orange-border);background:var(--c-orange-light)}
+.card.grey  {border-color:var(--c-grey-border); background:var(--c-grey-light)}
+.card.green {border-color:var(--c-green-border);background:var(--c-green-light)}
+
+.title{display:flex;align-items:center;gap:.75rem;font-size:var(--fs-h2);font-weight:600;line-height:1.25}
+.icon{width:30px;height:30px;display:inline-block;position:relative}
+
+/* mask icons */
+.icon::before{
+	content:"";position:absolute;inset:0;
+	mask-size:contain;mask-repeat:no-repeat;mask-position:center;
+	background:currentColor;
+}
+.icon.funnel{color:var(--c-blue)}
+.icon.funnel::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4h18L14 13v6l-4 1v-7L3 4Z"/></svg>')}
+.icon.list{color:var(--c-orange)}
+.icon.list::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4z"/></svg>')}
+.icon.target{color:var(--c-grey)}
+.icon.target::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3v2a7 7 0 1 1-7 7H3a9 9 0 1 0 9-9Z"/><circle cx="12" cy="12" r="3"/></svg>')}
+.icon.bar{color:var(--c-green)}
+.icon.bar::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 9h3v11H5zm5-4h3v15h-3zm5 8h3v7h-3z"/></svg>')}
+
+.number{font-size:var(--fs-number);font-weight:700;margin-top:.5rem}
+
+/* ---------- Charts ---------- */
+.chart-grid{display:grid;gap:1.5rem;grid-template-columns:1fr}
+@media(min-width:820px){.chart-grid{grid-template-columns:repeat(2,1fr);grid-column:1/-1}}
+.panel{
+	border:2px solid var(--c-grey-border);border-radius:10px;background:#fff;
+	padding:1.6rem 1.8rem;display:flex;flex-direction:column;height:100%
+}
+.panel h2{font-size:var(--fs-h2);font-weight:700;margin-bottom:1rem}
+#chart-wrapper{position:relative;height:300px}
+
+/* ---------- Donut ---------- */
+#donut{
+	--size:230px;--hole:62%;
+	width:var(--size);height:var(--size);border-radius:50%;
+	background:conic-gradient(var(--c-orange) var(--angle),#e6e9ed 0);
+	position:relative;display:grid;place-content:center;margin:auto
+}
+#donut::before{content:"";position:absolute;border-radius:50%;inset:calc((100% - var(--hole)) / 2);background:#fff}
+#donut>*{position:relative;z-index:1}
+#donut .value{font-size:2.5rem;font-weight:700;text-align:center}
+#donut .pct{font-size:1rem;color:var(--c-grey);text-align:center}
+
+/* small screens */
+@media(max-width:500px){
+	.card{min-height:130px}
+	#donut{--size:180px}
+}
+</style>
+</head>
+<body>
+<section class="dashboard">
+
+	<header class="hdr">
+		<h1>Vertriebsübersicht</h1>
+		<span class="date" id="today"></span>
+	</header>
+
+	<!-- KPI cards -->
+	<div class="cards">
+		<div class="card">
+			<div class="title"><span class="icon funnel"></span>Leads</div>
+			<div class="number" id="leads"></div>
+		</div>
+		<div class="card orange">
+			<div class="title"><span class="icon list"></span>Angebote<br>heute</div>
+			<div class="number" id="offers-today"></div>
+		</div>
+		<div class="card grey">
+			<div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div>
+			<div class="number" id="goal">12</div>
+		</div>
+		<div class="card green">
+			<div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div>
+			<div class="number" id="avg-5">6,2</div>
+		</div>
+	</div>
+
+	<!-- Charts -->
+	<div class="chart-grid">
+		<!-- BAR -->
+		<div class="panel">
+			<h2>Täglich geschriebene Angebote</h2>
+			<div id="chart-wrapper"><canvas id="dailyChart"></canvas></div>
+		</div>
+
+		<!-- DONUT -->
+		<div class="panel">
+			<h2>Angebote heute erstellt</h2>
+			<div id="donut">
+				<div class="value" id="donut-val"></div>
+				<div class="pct" id="donut-pct">66&nbsp;%</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+/* ---------- Date ---------- */
+document.getElementById('today').textContent =
+	new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(new Date());
+
+/* ---------- Data ---------- */
+const bars=[
+	{day:'Mo',date:'07.07.',val:4},
+	{day:'Di',date:'08.07.',val:0},
+	{day:'Mi',date:'09.07.',val:0},
+	{day:'Do',date:'10.07.',val:0},
+	{day:'Fr',date:'11.07.',val:0},
+];
+const max=30, step=5;
+const current=4, goal=12;
+
+/* ---------- Resolve theme colours --------------------------- */
+const css      = getComputedStyle(document.documentElement);
+const cBar     = css.getPropertyValue('--c-bar').trim();
+const cLabel   = css.getPropertyValue('--c-label').trim();
+const cGrid    = css.getPropertyValue('--c-grid-dark').trim();
+const cText    = css.getPropertyValue('--c-text').trim();
+
+/* ---------- Bar chart --------------------------------------- */
+new Chart(document.getElementById('dailyChart'),{
+	type:'bar',
+	data:{
+		labels:bars.map(b=>`${b.day}\n${b.date}`),
+		datasets:[{
+			data:bars.map(b=>b.val),
+			backgroundColor:cBar,
+			borderRadius:4,
+			barThickness:38
+		}]
+	},
+	options:{
+		responsive:true,
+		maintainAspectRatio:false,
+		layout:{padding:{top:10,right:8,left:8,bottom:0}},
+		scales:{
+			x:{
+				grid:{display:false},
+				ticks:{
+					color:cLabel,
+					font:{size:14,weight:500},
+					callback:(_,i)=>`${bars[i].day}\n${bars[i].date}`
+				}
+			},
+			y:{
+				beginAtZero:true,
+				suggestedMax:max,
+				ticks:{stepSize:step,color:cLabel,font:{size:14}},
+				grid:{
+					color:cGrid,    /* darker grid colour */
+					lineWidth:1.2,
+					drawBorder:false
+				}
+			}
+		},
+		plugins:{
+			legend:{display:false},
+			tooltip:{
+				backgroundColor:cText,
+				callbacks:{label:ctx=>` ${ctx.parsed.y} Angebote`}
+			}
+		}
+	}
+});
+
+/* ---------- Donut ------------------------------------------- */
+const donut=document.getElementById('donut');
+donut.style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
+document.getElementById('donut-val').textContent=current;
+document.getElementById('donut-pct').textContent=Math.round((current/goal)*100)+' %';
+</script>
+</body>
+</html>
