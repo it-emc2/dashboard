@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vertriebsübersicht</title>
 
-<!-- Chart.js + datalabels -->
+<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
 <style>
 /* ---------- Design Tokens ---------- */
@@ -17,6 +16,7 @@
 	--fs-h2:1.15rem;
 	--fs-number:clamp(2rem,6vw,3.4rem);
 
+	/* base colours */
 	--c-blue:#2376ff;
 	--c-blue-light:#eaf3ff;
 	--c-blue-border:#cfe2ff;
@@ -29,25 +29,27 @@
 	--c-grey-light:#fafbfd;
 	--c-grey-border:#e1e6ef;
 
-	--c-green:#029c46;   /* Barrierefrei */
-	--c-lime:#a7e80d;    /* HMS */
-	--c-pink:#d51ae6;    /* AH */
-
+	--c-green:#029c46;
 	--c-green-light:#e8faed;
 	--c-green-border:#c9f1d8;
 
 	--c-bg:#ffffff;
 	--c-grid:#e5e7eb;
-	--c-grid-dark:#d0d5dd;
+	--c-grid-dark:#d0d5dd;   /* darker lines for the canvas grid */
 	--c-text:#0d1117;
 
-	--c-label:#868E99;
+	/* chart-specific */
+	--c-bar:#2376ff;         /* bars */
+	--c-label:#868E99;       /* axis labels & ticks */
 }
 
 /* ---------- Reset ---------- */
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
-     -webkit-font-smoothing:antialiased;padding:2.5rem 1.25rem}
+body{
+	font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
+	-webkit-font-smoothing:antialiased;
+	padding:2.5rem 1.25rem;
+}
 
 /* ---------- Layout ---------- */
 .dashboard{display:grid;gap:1.5rem;max-width:1150px;margin-inline:auto}
@@ -71,7 +73,13 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 
 .title{display:flex;align-items:center;gap:.75rem;font-size:var(--fs-h2);font-weight:600;line-height:1.25}
 .icon{width:30px;height:30px;display:inline-block;position:relative}
-.icon::before{content:"";position:absolute;inset:0;mask-size:contain;mask-repeat:no-repeat;mask-position:center;background:currentColor}
+
+/* mask icons */
+.icon::before{
+	content:"";position:absolute;inset:0;
+	mask-size:contain;mask-repeat:no-repeat;mask-position:center;
+	background:currentColor;
+}
 .icon.funnel{color:var(--c-blue)}
 .icon.funnel::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4h18L14 13v6l-4 1v-7L3 4Z"/></svg>')}
 .icon.list{color:var(--c-orange)}
@@ -94,22 +102,22 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 #chart-wrapper{position:relative;height:300px}
 
 /* ---------- Donut ---------- */
-#donut{--size:230px;--hole:62%;
+#donut{
+	--size:230px;--hole:62%;
 	width:var(--size);height:var(--size);border-radius:50%;
 	background:conic-gradient(var(--c-orange) var(--angle),#e6e9ed 0);
-	position:relative;display:grid;place-content:center;margin:auto}
+	position:relative;display:grid;place-content:center;margin:auto
+}
 #donut::before{content:"";position:absolute;border-radius:50%;inset:calc((100% - var(--hole)) / 2);background:#fff}
 #donut>*{position:relative;z-index:1}
 #donut .value{font-size:2.5rem;font-weight:700;text-align:center}
 #donut .pct{font-size:1rem;color:var(--c-grey);text-align:center}
 
-/* breakdown tiles */
-.breakdown{display:flex;justify-content:space-around;margin-top:1rem}
-.brk-item{display:flex;flex-direction:column;align-items:center;font-weight:700;font-size:1rem;gap:.4rem}
-.brk-box{width:60px;height:32px;border-radius:4px;display:grid;place-content:center;color:#fff;font-size:1.1rem}
-
 /* small screens */
-@media(max-width:500px){#donut{--size:180px}.card{min-height:130px}}
+@media(max-width:500px){
+	.card{min-height:130px}
+	#donut{--size:180px}
+}
 </style>
 </head>
 <body>
@@ -124,19 +132,19 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 	<div class="cards">
 		<div class="card">
 			<div class="title"><span class="icon funnel"></span>Leads</div>
-			<div class="number" id="leads">32</div>
+			<div class="number" id="leads"></div>
 		</div>
 		<div class="card orange">
 			<div class="title"><span class="icon list"></span>Angebote<br>heute</div>
-			<div class="number" id="offers-today">16</div>
+			<div class="number" id="offers-today">22</div>
 		</div>
 		<div class="card grey">
 			<div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div>
-			<div class="number" id="goal">24</div>
+			<div class="number" id="goal">12</div>
 		</div>
 		<div class="card green">
 			<div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div>
-			<div class="number" id="avg-5">17,0</div>
+			<div class="number" id="avg-5">6,2</div>
 		</div>
 	</div>
 
@@ -152,95 +160,87 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 		<div class="panel">
 			<h2>Angebote heute erstellt</h2>
 			<div id="donut">
-				<div class="value" id="donut-val">16</div>
-				<div class="pct"   id="donut-pct">66&nbsp;%</div>
-			</div>
-
-			<!-- breakdown -->
-			<div class="breakdown">
-				<div class="brk-item"><div class="brk-box" style="background:var(--c-green)" id="brk1">8</div><span>Barrierefrei</span></div>
-				<div class="brk-item"><div class="brk-box" style="background:var(--c-lime);color:#000" id="brk2">6</div><span>HMS</span></div>
-				<div class="brk-item"><div class="brk-box" style="background:var(--c-pink)" id="brk3">2</div><span>AH</span></div>
+				<div class="value" id="donut-val">22</div>
+				<div class="pct" id="donut-pct">66&nbsp;%</div>
 			</div>
 		</div>
 	</div>
 </section>
 
 <script>
-/* ---------- helpers ---------- */
-const css = getComputedStyle(document.documentElement);
-const getCss = v => css.getPropertyValue(v).trim();
-
 /* ---------- Date ---------- */
 document.getElementById('today').textContent =
 	new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(new Date());
 
 /* ---------- Data ---------- */
-const categories = ['Barrierefrei','HMS','AH'];
-const colours    = [getCss('--c-green'), getCss('--c-lime'), getCss('--c-pink')];
-
-const bars = [
-	{day:'Mo',date:'20.06.',vals:[6,8,2]},
-	{day:'Di',date:'21.06.',vals:[8,6,3]},
-	{day:'Mi',date:'22.06.',vals:[8,7,3]},
-	{day:'Do',date:'23.06.',vals:[7,8,3]},
-	{day:'Fr',date:'24.06.',vals:[8,6,2]},
+const bars=[
+	{day:'Mo',date:'07.07.',val:4},
+	{day:'Di',date:'08.07.',val:0},
+	{day:'Mi',date:'09.07.',val:0},
+	{day:'Do',date:'10.07.',val:0},
+	{day:'Fr',date:'11.07.',val:0},
 ];
+const max=30, step=5;
+const current=4, goal=12;
 
-/* ---------- Stacked bar chart ---------- */
-Chart.register(ChartDataLabels);
+/* ---------- Resolve theme colours --------------------------- */
+const css      = getComputedStyle(document.documentElement);
+const cBar     = css.getPropertyValue('--c-bar').trim();
+const cLabel   = css.getPropertyValue('--c-label').trim();
+const cGrid    = css.getPropertyValue('--c-grid-dark').trim();
+const cText    = css.getPropertyValue('--c-text').trim();
+
+/* ---------- Bar chart --------------------------------------- */
 new Chart(document.getElementById('dailyChart'),{
 	type:'bar',
 	data:{
 		labels:bars.map(b=>`${b.day}\n${b.date}`),
-		datasets:categories.map((c,i)=>({
-			label:c,
-			data:bars.map(b=>b.vals[i]),
-			backgroundColor:colours[i],
+		datasets:[{
+			data:bars.map(b=>b.val),
+			backgroundColor:cBar,
 			borderRadius:4,
-			barThickness:40,
-			stack:'total'
-		}))
+			barThickness:38
+		}]
 	},
 	options:{
 		responsive:true,
 		maintainAspectRatio:false,
 		layout:{padding:{top:10,right:8,left:8,bottom:0}},
 		scales:{
-			x:{stacked:true,grid:{display:false},
-				ticks:{color:getCss('--c-label'),font:{size:14,weight:500}}},
-			y:{stacked:true,beginAtZero:true,suggestedMax:25,
-				ticks:{stepSize:5,color:getCss('--c-label'),font:{size:14}},
-				grid:{color:getCss('--c-grid-dark'),lineWidth:1.2,drawBorder:false}}
+			x:{
+				grid:{display:false},
+				ticks:{
+					color:cLabel,
+					font:{size:14,weight:500},
+					callback:(_,i)=>`${bars[i].day}\n${bars[i].date}`
+				}
+			},
+			y:{
+				beginAtZero:true,
+				suggestedMax:max,
+				ticks:{stepSize:step,color:cLabel,font:{size:14}},
+				grid:{
+					color:cGrid,    /* darker grid colour */
+					lineWidth:1.2,
+					drawBorder:false
+				}
+			}
 		},
 		plugins:{
 			legend:{display:false},
-			datalabels:{
-				formatter:(v)=>v? v : '',
-				color:getCss('--c-text'),
-				font:{weight:700,size:14},
-				anchor:'center',
-				align:'center',
-				clip:true
-			},
 			tooltip:{
-				backgroundColor:getCss('--c-text'),
-				callbacks:{
-					title:ctx=>ctx[0].label.replace('\n',' '),
-					label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}`
-				}
+				backgroundColor:cText,
+				callbacks:{label:ctx=>` ${ctx.parsed.y} Angebote`}
 			}
 		}
 	}
 });
 
-/* ---------- Donut ---------- */
-const todayVals=[8,6,2], goal=24;
-const current=todayVals.reduce((s,v)=>s+v,0);
-document.getElementById('donut').style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
+/* ---------- Donut ------------------------------------------- */
+const donut=document.getElementById('donut');
+donut.style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
 document.getElementById('donut-val').textContent=current;
 document.getElementById('donut-pct').textContent=Math.round((current/goal)*100)+' %';
-['brk1','brk2','brk3'].forEach((id,i)=>document.getElementById(id).textContent=todayVals[i]);
 </script>
 </body>
 </html>
