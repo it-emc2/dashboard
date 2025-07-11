@@ -91,10 +91,10 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 	</header>
 
 	<div class="cards">
-		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">96</div></div>
+		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">97</div></div>
 		<div class="card orange"><div class="title"><span class="icon list"></span>Angebote<br>heute</div><div class="number" id="offers-today">0</div></div>
 		<div class="card grey"><div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div><div class="number" id="goal">12</div></div>
-		<div class="card green"><div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div><div class="number" id="avg-5">17,0</div></div>
+		<div class="card green"><div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div><div class="number" id="avg-5">--</div></div>
 	</div>
 
 	<div class="chart-grid">
@@ -105,11 +105,11 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 
 		<div class="panel">
 			<h2>Angebote heute erstellt</h2>
-			<div id="donut"><div class="value" id="donut-val">16</div><div class="pct" id="donut-pct">66&nbsp;%</div></div>
+			<div id="donut"><div class="value" id="donut-val">--</div><div class="pct" id="donut-pct">-- %</div></div>
 			<div class="breakdown">
-				<div class="brk-item"><div class="brk-box" style="background:var(--c-green)" id="brk1">1</div><span>Barrierefrei</span></div>
-				<div class="brk-item"><div class="brk-box" style="background:var(--c-lime);color:#000" id="brk2">0</div><span>HMS</span></div>
-				<div class="brk-item"><div class="brk-box" style="background:var(--c-pink)" id="brk3">0</div><span>AH</span></div>
+				<div class="brk-item"><div class="brk-box" style="background:var(--c-green)" id="brk1">--</div><span>Barrierefrei</span></div>
+				<div class="brk-item"><div class="brk-box" style="background:var(--c-lime);color:#000" id="brk2">--</div><span>HMS</span></div>
+				<div class="brk-item"><div class="brk-box" style="background:var(--c-pink)" id="brk3">--</div><span>AH</span></div>
 			</div>
 		</div>
 	</div>
@@ -127,7 +127,7 @@ document.getElementById('today').textContent =
 const categories=['Barrierefrei','HMS','AH'];
 const colours   =[getCss('--c-green'),getCss('--c-lime'),getCss('--c-pink')];
 
-/* --------------- auto–generated bars ---------------------------- */
+/* --------------- auto-generated bars ---------------------------- */
 /* 1. sample numbers for the 5 days (edit to suit) */
 const barValues=[
   [6,8,2],
@@ -137,16 +137,16 @@ const barValues=[
   [8,6,2]
 ];
 
-/* 2. create array with the last five work-days (Mon-Fri) */
+/* 2. create array with the last five work-days */
 function getLastWorkdays(n){
   const list=[];
-  let d=new Date();                 // today
+  let d=new Date();
   while(list.length<n){
-    const wd=d.getDay();            // 0=Sun … 6=Sat
-    if(wd!==0 && wd!==6) list.push(new Date(d)); // only keep Mon-Fri
-    d.setDate(d.getDate()-1);       // step back one day
+    const wd=d.getDay();
+    if(wd!==0 && wd!==6) list.push(new Date(d));
+    d.setDate(d.getDate()-1);
   }
-  return list.reverse();            // chronological order
+  return list.reverse();
 }
 
 /* 3. build the bars array */
@@ -156,10 +156,20 @@ const workdays=getLastWorkdays(5);
 
 const bars=workdays.map((date,i)=>({
   day:daysDe[date.getDay()],
-  date:dateFmt.format(date)+'.',     // „24.06.“
-  vals:barValues[i]                  // your numbers
+  date:dateFmt.format(date)+'.',
+  vals:barValues[i]
 }));
 /* ---------------------------------------------------------------- */
+
+/* ---------- AVG 5 DAYS ----------------------------------------- */
+const avg5 = barValues.reduce(
+  (sum,arr)=>sum+arr.reduce((s,v)=>s+v,0),0
+)/barValues.length;
+
+document.getElementById('avg-5').textContent =
+  new Intl.NumberFormat('de-DE',
+    {minimumFractionDigits:1,maximumFractionDigits:1}
+  ).format(avg5);
 
 /* ---------- BAR TOTALS PLUGIN ----------------------------------- */
 const barTotals={
@@ -226,8 +236,10 @@ new Chart(document.getElementById('dailyChart'),{
 });
 
 /* ---------- DONUT ------------------------------------------------ */
-const todayVals=[8,6,2], goal=24;
-const current=todayVals.reduce((s,v)=>s+v,0);
+const todayVals=bars[bars.length-1].vals;        // pulled from bar chart
+const goal     =24;                              // daily target
+const current  =todayVals.reduce((s,v)=>s+v,0);
+
 document.getElementById('donut').style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
 document.getElementById('donut-val').textContent=current;
 document.getElementById('donut-pct').textContent=Math.round((current/goal)*100)+' %';
