@@ -91,7 +91,7 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 	</header>
 
 	<div class="cards">
-		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">0</div></div>
+		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">97</div></div>
 		<div class="card orange"><div class="title"><span class="icon list"></span>Angebote<br>heute</div><div class="number" id="offers-today">0</div></div>
 		<div class="card grey"><div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div><div class="number" id="goal">12</div></div>
 		<div class="card green"><div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div><div class="number" id="avg-5">17,0</div></div>
@@ -127,13 +127,39 @@ document.getElementById('today').textContent =
 const categories=['Barrierefrei','HMS','AH'];
 const colours   =[getCss('--c-green'),getCss('--c-lime'),getCss('--c-pink')];
 
-const bars=[
-	{day:'Mo',date:'20.06.',vals:[6,8,2]},
-	{day:'Di',date:'21.06.',vals:[8,6,3]},
-	{day:'Mi',date:'22.06.',vals:[8,7,3]},
-	{day:'Do',date:'23.06.',vals:[7,8,3]},
-	{day:'Fr',date:'24.06.',vals:[8,6,2]},
+/* --------------- auto–generated bars ---------------------------- */
+/* 1. sample numbers for the 5 days (edit to suit) */
+const barValues=[
+  [6,8,2],
+  [8,6,3],
+  [8,7,3],
+  [7,8,3],
+  [8,6,2]
 ];
+
+/* 2. create array with the last five work-days (Mon-Fri) */
+function getLastWorkdays(n){
+  const list=[];
+  let d=new Date();                 // today
+  while(list.length<n){
+    const wd=d.getDay();            // 0=Sun … 6=Sat
+    if(wd!==0 && wd!==6) list.push(new Date(d)); // only keep Mon-Fri
+    d.setDate(d.getDate()-1);       // step back one day
+  }
+  return list.reverse();            // chronological order
+}
+
+/* 3. build the bars array */
+const daysDe=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const dateFmt=new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
+const workdays=getLastWorkdays(5);
+
+const bars=workdays.map((date,i)=>({
+  day:daysDe[date.getDay()],
+  date:dateFmt.format(date)+'.',     // „24.06.“
+  vals:barValues[i]                  // your numbers
+}));
+/* ---------------------------------------------------------------- */
 
 /* ---------- BAR TOTALS PLUGIN ----------------------------------- */
 const barTotals={
