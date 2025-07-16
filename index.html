@@ -175,7 +175,7 @@ function getLastWorkdays(n){
 const daysDe=['So','Mo','Di','Mi','Do','Fr','Sa'];
 const dateFmt=new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
 const workdays=getLastWorkdays(5);
-
+const valuesInChronoOrder = barValues.slice().reverse();
 const bars=workdays.map((date,i)=>({
   day:daysDe[date.getDay()],
   date:dateFmt.format(date)+'.',
