@@ -1,11 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- ── NEW: auto-refresh every 300 s = 5 min ── -->
-<meta http-equiv="refresh" content="300">	
+<!-- Auto-refresh every 300 s (5 min) -->
+<meta http-equiv="refresh" content="300">
+
 <title>Vertriebsübersicht</title>
 
 <!-- Chart.js + datalabels -->
@@ -94,7 +94,7 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 	</header>
 
 	<div class="cards">
-		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">100</div></div>
+		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">101</div></div>
 		<div class="card grey"><div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div><div class="number" id="goal">12</div></div>
 		<div class="card green"><div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div><div class="number" id="avg-5">--</div></div>
 	</div>
@@ -129,71 +129,53 @@ document.getElementById('today').textContent =
 const categories=['Barrierefrei','HMS','AH'];
 const colours   =[getCss('--c-green'),getCss('--c-lime'),getCss('--c-pink')];
 
-/* --------------- auto-generated bars ---------------------------- */
-/* 1. sample numbers for the 5 days (edit to suit) */
+/* --------------- numbers from the spreadsheet ------------------ */
+/* REPLACE this placeholder with the array you fetch from the sheet */
 const barValues=[
-    [
-      4,
-      0,
-      0
-    ],
-    [
-      1,
-      2,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      1,
-      0
-    ]
-  ];
+	/* newest ……………………………… oldest
+	   0-4 = today, yesterday, …      */
+	[0,0,0],   // today
+	[1,2,0],   // -1
+	[4,0,0],   // -2
+	[0,0,0],   // -3
+	[0,0,0]    // -4
+];
 
 /* 2. create array with the last five work-days */
 function getLastWorkdays(n){
-  const list=[];
-  let d=new Date();
-  while(list.length<n){
-    const wd=d.getDay();
-    if(wd!==0 && wd!==6) list.push(new Date(d));
-    d.setDate(d.getDate()-1);
-  }
-  return list.reverse();
+	const list=[];
+	let d=new Date();
+	while(list.length<n){
+		const wd=d.getDay();
+		if(wd!==0 && wd!==6) list.push(new Date(d));
+		d.setDate(d.getDate()-1);
+	}
+	return list.reverse(); // chronological (oldest→newest)
 }
 
-/* 3. build the bars array */
+/* 3. build the bars array --------------------------------------- */
 const daysDe=['So','Mo','Di','Mi','Do','Fr','Sa'];
 const dateFmt=new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
 const workdays=getLastWorkdays(5);
+
+/* --- FIX: flip values so index 0 = oldest, 4 = today ---------- */
 const valuesInChronoOrder = barValues.slice().reverse();
+
 const bars=workdays.map((date,i)=>({
-  day:daysDe[date.getDay()],
-  date:dateFmt.format(date)+'.',
-  vals:barValues[i]
+	day : daysDe[date.getDay()],
+	date: dateFmt.format(date)+'.',
+	vals: valuesInChronoOrder[i]
 }));
-/* ---------------------------------------------------------------- */
 
 /* ---------- AVG 5 DAYS ----------------------------------------- */
-const avg5 = barValues.reduce(
+const avg5 = valuesInChronoOrder.reduce(
   (sum,arr)=>sum+arr.reduce((s,v)=>s+v,0),0
-)/barValues.length;
+)/valuesInChronoOrder.length;
 
 document.getElementById('avg-5').textContent =
-  new Intl.NumberFormat('de-DE',
-    {minimumFractionDigits:1,maximumFractionDigits:1}
-  ).format(avg5);
+	new Intl.NumberFormat('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1}).format(avg5);
 
-/* ---------- BAR TOTALS PLUGIN ----------------------------------- */
+/* ---------- BAR TOTALS PLUGIN ---------------------------------- */
 const barTotals={
 	id:'barTotals',
 	afterDatasetsDraw(chart){
@@ -214,7 +196,7 @@ const barTotals={
 };
 Chart.register(barTotals,ChartDataLabels);
 
-/* ---------- STACKED BAR CHART ----------------------------------- */
+/* ---------- STACKED BAR CHART ---------------------------------- */
 new Chart(document.getElementById('dailyChart'),{
 	type:'bar',
 	data:{
@@ -257,9 +239,9 @@ new Chart(document.getElementById('dailyChart'),{
 	}
 });
 
-/* ---------- DONUT ------------------------------------------------ */
-const todayVals=bars[bars.length-1].vals;        // pulled from bar chart
-const goal     =24;                              // daily target
+/* ---------- DONUT ---------------------------------------------- */
+const todayVals=bars[bars.length-1].vals;
+const goal     =24;
 const current  =todayVals.reduce((s,v)=>s+v,0);
 
 document.getElementById('donut').style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
