@@ -92,7 +92,7 @@ body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
 	</header>
 
 	<div class="cards">
-		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">95</div></div>
+		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">100</div></div>
 		<div class="card grey"><div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div><div class="number" id="goal">12</div></div>
 		<div class="card green"><div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div><div class="number" id="avg-5">--</div></div>
 	</div>
@@ -130,12 +130,32 @@ const colours   =[getCss('--c-green'),getCss('--c-lime'),getCss('--c-pink')];
 /* --------------- auto-generated bars ---------------------------- */
 /* 1. sample numbers for the 5 days (edit to suit) */
 const barValues=[
-  [6,8,2],
-  [8,6,3],
-  [8,7,3],
-  [7,8,3],
-  [1,1,0]
-];
+    [
+      4,
+      0,
+      0
+    ],
+    [
+      1,
+      2,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0
+    ]
+  ];
 
 /* 2. create array with the last five work-days */
 function getLastWorkdays(n){
