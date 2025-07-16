@@ -1,1 +1,249 @@
 
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vertriebsübersicht</title>
+
+<!-- Chart.js + datalabels -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<style>
+:root{
+	--font-sans:"Inter","SF Pro Display",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+	--fs-h1:clamp(1.8rem,4vw,2.6rem);
+	--fs-h2:1.15rem;
+	--fs-number:clamp(2rem,6vw,3.4rem);
+
+	--c-blue:#2376ff; --c-blue-light:#eaf3ff; --c-blue-border:#cfe2ff;
+	--c-orange:#ff7a1c; --c-orange-light:#fff6ed; --c-orange-border:#ffd6b7;
+	--c-grey:#6d7786; --c-grey-light:#fafbfd; --c-grey-border:#e1e6ef;
+
+	--c-green:#029c46;  /* Barrierefrei */
+	--c-lime:#a7e80d;   /* HMS          */
+	--c-pink:#d51ae6;   /* AH           */
+
+	--c-bg:#fff; --c-grid-dark:#d0d5dd; --c-label:#868E99; --c-text:#0d1117;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font-sans);background:var(--c-bg);color:var(--c-text);
+     -webkit-font-smoothing:antialiased;padding:2.5rem 1.25rem}
+
+.dashboard{display:grid;gap:1.5rem;max-width:1150px;margin-inline:auto}
+@media(min-width:820px){.dashboard{grid-template-columns:repeat(12,1fr)}}
+
+.hdr{grid-column:1/-1;display:flex;justify-content:space-between;align-items:start}
+.hdr h1{font-size:var(--fs-h1);font-weight:800}
+.hdr .date{font-size:1.15rem;font-weight:500;color:var(--c-grey)}
+
+/* cards ------------------------------------------------------- */
+.cards{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.2rem}
+.card{padding:1.6rem 1.8rem;border-radius:10px;min-height:150px;border:2px solid var(--c-blue-border);background:var(--c-blue-light);display:flex;flex-direction:column;justify-content:space-between}
+.card.orange{border-color:var(--c-orange-border);background:var(--c-orange-light)}
+.card.grey  {border-color:var(--c-grey-border); background:var(--c-grey-light)}
+.card.green {border-color:#c9f1d8;background:#e8faed}
+.title{display:flex;align-items:center;gap:.75rem;font-size:var(--fs-h2);font-weight:600;line-height:1.25}
+.icon{width:30px;height:30px;display:inline-block;position:relative}
+.icon::before{content:"";position:absolute;inset:0;mask-size:contain;mask-repeat:no-repeat;mask-position:center;background:currentColor}
+.icon.funnel{color:var(--c-blue)}
+.icon.funnel::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 4h18L14 13v6l-4 1v-7L3 4Z"/></svg>')}
+.icon.list{color:var(--c-orange)}
+.icon.list::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4z"/></svg>')}
+.icon.target{color:var(--c-grey)}
+.icon.target::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3v2a7 7 0 1 1-7 7H3a9 9 0 1 0 9-9Z"/><circle cx="12" cy="12" r="3"/></svg>')}
+.icon.bar{color:var(--c-green)}
+.icon.bar::before{mask-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5 9h3v11H5zm5-4h3v15h-3zm5 8h3v7h-3z"/></svg>')}
+.number{font-size:var(--fs-number);font-weight:700;margin-top:.5rem}
+
+/* panels / charts -------------------------------------------- */
+.chart-grid{display:grid;gap:1.5rem;grid-template-columns:1fr}
+@media(min-width:820px){.chart-grid{grid-template-columns:repeat(2,1fr);grid-column:1/-1}}
+.panel{border:2px solid var(--c-grey-border);border-radius:10px;background:#fff;
+       padding:1.6rem 1.8rem;display:flex;flex-direction:column;height:100%}
+.panel h2{font-size:var(--fs-h2);font-weight:700;margin-bottom:1rem}
+#chart-wrapper{position:relative;height:300px}
+
+/* donut ------------------------------------------------------- */
+#donut{--size:230px;--hole:62%;
+	width:var(--size);height:var(--size);border-radius:50%;
+	background:conic-gradient(var(--c-orange) var(--angle),#e6e9ed 0);
+	position:relative;display:grid;place-content:center;margin:auto}
+#donut::before{content:"";position:absolute;border-radius:50%;inset:calc((100% - var(--hole))/2);background:#fff}
+#donut>*{position:relative;z-index:1}
+#donut .value{font-size:2.5rem;font-weight:700;text-align:center}
+#donut .pct{font-size:1rem;color:var(--c-grey);text-align:center}
+
+.breakdown{display:flex;justify-content:space-around;margin-top:1rem}
+.brk-item{display:flex;flex-direction:column;align-items:center;font-weight:700;font-size:1rem;gap:.4rem}
+.brk-box{width:60px;height:32px;border-radius:4px;display:grid;place-content:center;color:#fff;font-size:1.1rem}
+
+/* small screens */
+@media(max-width:500px){#donut{--size:180px}.card{min-height:130px}}
+</style>
+</head>
+<body>
+<section class="dashboard">
+
+	<header class="hdr">
+		<h1>Vertriebsübersicht</h1><span class="date" id="today"></span>
+	</header>
+
+	<div class="cards">
+		<div class="card"><div class="title"><span class="icon funnel"></span>Leads</div><div class="number" id="leads">95</div></div>
+		<div class="card grey"><div class="title"><span class="icon target"></span>Ziel:<br>Angebote&nbsp;heute</div><div class="number" id="goal">12</div></div>
+		<div class="card green"><div class="title"><span class="icon bar"></span>Ø Angebote<br>(5&nbsp;Tage)</div><div class="number" id="avg-5">--</div></div>
+	</div>
+
+	<div class="chart-grid">
+		<div class="panel">
+			<h2>Täglich geschriebene Angebote</h2>
+			<div id="chart-wrapper"><canvas id="dailyChart"></canvas></div>
+		</div>
+
+		<div class="panel">
+			<h2>Angebote heute erstellt</h2>
+			<div id="donut"><div class="value" id="donut-val">--</div><div class="pct" id="donut-pct">-- %</div></div>
+			<div class="breakdown">
+				<div class="brk-item"><div class="brk-box" style="background:var(--c-green)" id="brk1">--</div><span>Barrierefrei</span></div>
+				<div class="brk-item"><div class="brk-box" style="background:var(--c-lime);color:#000" id="brk2">--</div><span>HMS</span></div>
+				<div class="brk-item"><div class="brk-box" style="background:var(--c-pink)" id="brk3">--</div><span>AH</span></div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+/* helper to read CSS custom props */
+const getCss = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* today’s date */
+document.getElementById('today').textContent =
+	new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'long',year:'numeric'}).format(new Date());
+
+/* ---------- DATA ------------------------------------------------ */
+const categories=['Barrierefrei','HMS','AH'];
+const colours   =[getCss('--c-green'),getCss('--c-lime'),getCss('--c-pink')];
+
+/* --------------- auto-generated bars ---------------------------- */
+/* 1. sample numbers for the 5 days (edit to suit) */
+const barValues=[
+  [6,8,2],
+  [8,6,3],
+  [8,7,3],
+  [7,8,3],
+  [1,1,0]
+];
+
+/* 2. create array with the last five work-days */
+function getLastWorkdays(n){
+  const list=[];
+  let d=new Date();
+  while(list.length<n){
+    const wd=d.getDay();
+    if(wd!==0 && wd!==6) list.push(new Date(d));
+    d.setDate(d.getDate()-1);
+  }
+  return list.reverse();
+}
+
+/* 3. build the bars array */
+const daysDe=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const dateFmt=new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit'});
+const workdays=getLastWorkdays(5);
+
+const bars=workdays.map((date,i)=>({
+  day:daysDe[date.getDay()],
+  date:dateFmt.format(date)+'.',
+  vals:barValues[i]
+}));
+/* ---------------------------------------------------------------- */
+
+/* ---------- AVG 5 DAYS ----------------------------------------- */
+const avg5 = barValues.reduce(
+  (sum,arr)=>sum+arr.reduce((s,v)=>s+v,0),0
+)/barValues.length;
+
+document.getElementById('avg-5').textContent =
+  new Intl.NumberFormat('de-DE',
+    {minimumFractionDigits:1,maximumFractionDigits:1}
+  ).format(avg5);
+
+/* ---------- BAR TOTALS PLUGIN ----------------------------------- */
+const barTotals={
+	id:'barTotals',
+	afterDatasetsDraw(chart){
+		const {ctx,data:{datasets}}=chart;
+		const lastMeta=chart.getDatasetMeta(datasets.length-1);
+		ctx.save();
+		ctx.font=`700 16px ${getCss('--font-sans')}`;
+		ctx.fillStyle=getCss('--c-text');
+		ctx.textAlign='center';
+		ctx.textBaseline='bottom';
+
+		lastMeta.data.forEach((el,i)=>{
+			const total=datasets.reduce((s,d)=>s+d.data[i],0);
+			ctx.fillText(total,el.x,el.y-6);
+		});
+		ctx.restore();
+	}
+};
+Chart.register(barTotals,ChartDataLabels);
+
+/* ---------- STACKED BAR CHART ----------------------------------- */
+new Chart(document.getElementById('dailyChart'),{
+	type:'bar',
+	data:{
+		labels:bars.map(b=>`${b.day}\n${b.date}`),
+		datasets:categories.map((c,i)=>({
+			label:c,
+			data:bars.map(b=>b.vals[i]),
+			backgroundColor:colours[i],
+			borderRadius:4,
+			barThickness:40,
+			stack:'stack'
+		}))
+	},
+	options:{
+		responsive:true,maintainAspectRatio:false,
+		layout:{padding:{top:10,right:8,left:8,bottom:0}},
+		scales:{
+			x:{stacked:true,grid:{display:false},
+				ticks:{color:getCss('--c-label'),font:{size:14,weight:500}}},
+			y:{stacked:true,beginAtZero:true,suggestedMax:25,
+				ticks:{stepSize:5,color:getCss('--c-label'),font:{size:14}},
+				grid:{color:getCss('--c-grid-dark'),lineWidth:1.2,drawBorder:false}}
+		},
+		plugins:{
+			legend:{display:false},
+			datalabels:{
+				formatter:v=>v||'',
+				color:getCss('--c-text'),
+				font:{weight:700,size:14},
+				anchor:'center',align:'center',clip:true
+			},
+			tooltip:{
+				backgroundColor:getCss('--c-text'),
+				callbacks:{
+					title:ctx=>ctx[0].label.replace('\n',' '),
+					label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}`
+				}
+			}
+		}
+	}
+});
+
+/* ---------- DONUT ------------------------------------------------ */
+const todayVals=bars[bars.length-1].vals;        // pulled from bar chart
+const goal     =24;                              // daily target
+const current  =todayVals.reduce((s,v)=>s+v,0);
+
+document.getElementById('donut').style.setProperty('--angle',Math.min(current/goal,1)*360+'deg');
+document.getElementById('donut-val').textContent=current;
+document.getElementById('donut-pct').textContent=Math.round((current/goal)*100)+' %';
+['brk1','brk2','brk3'].forEach((id,i)=>document.getElementById(id).textContent=todayVals[i]);
+</script>
+</body>
+</html>
